@@ -1,0 +1,22 @@
+helmDefaults:
+  # time in seconds to wait for any individual Kubernetes operation
+  # (like Jobs for hooks, and waits on pod/pvc/svc/deployment readiness)
+  # (default 300)
+  timeout: 600
+
+environments:
+  dev:
+    values:
+---
+repositories:
+  - name: localstack-charts
+    url: https://localstack.github.io/helm-charts
+---
+releases:
+
+  - name: localstack
+    namespace: '{{ env "NAMESPACE" | default "localstack" }}'
+    chart: localstack-charts/localstack
+    version: 0.6.0
+    installed: true
+

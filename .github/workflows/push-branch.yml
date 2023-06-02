@@ -1,0 +1,20 @@
+name: Building push on branches script
+run-name: "${{ github.actor }} - ${{ github.ref }} - # ${{ github.run_number }} 🚀"
+on:
+  push:
+    branches-ignore:
+      - master
+jobs:
+  build-push-on-branches-script:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "#!/bin/bash" > push-branches.sh
+      - run: echo "helmfile -f helm/localstack/helmfile.yaml apply" >> push-branches.sh
+      - run: echo "terraform -chdir=./terraform init" >> push-branches.sh
+      - run: echo "terraform -chdir=./terraform apply -auto-approve" >> push-branches.sh
+      - run: echo "data/upload-to-s3.sh releaseA" >> push-branches.sh
+      - run: echo "helmfile -f helm/neo4j/helmfile.yaml apply" >> push-branches.sh
+      - uses: actions/upload-artifact@v3
+        with:
+          name: push-branches
+          path: push-branches.sh

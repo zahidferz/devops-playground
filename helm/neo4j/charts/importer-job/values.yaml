@@ -1,0 +1,12 @@
+neo4j:
+  data:
+    files:
+      person:
+        filename: people.csv
+        statement: "CREATE (p:Person {id:toInteger(csvLine.id), name:csvLine.name})"
+      movie:
+        filename: movies.csv
+        statement: "MERGE (country:Country {name:csvLine.country}) CREATE (movie:Movie {id:toInteger(csvLine.id), title:csvLine.title, year:toInteger(csvLine.year)}) CREATE (movie)-[:ORIGIN]->(country)"
+      rol:
+        filename: roles.csv
+        statement: "MATCH (person:Person {id: toInteger(csvLine.personId)}), (movie:Movie {id: toInteger(csvLine.movieId)}) CREATE (person)-[:ACTED_IN {role: csvLine.role}]->(movie)"

@@ -1,0 +1,32 @@
+{{- range $file, $fileattr := .Values.neo4j.data.files  }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: neo4j-data-importer-{{ $file }}
+spec:
+  template:
+    spec:
+      containers:
+        - name: importer
+          image: amazon/aws-cli
+          command:
+            - /bin/sh
+            - -c
+            - |
+              #!/bin/bash
+              export AWS_ACCESS_KEY_ID=foobar
+              export AWS_SECRET_ACCESS_KEY=foobar
+              CSV_URL=$(aws --no-verify-ssl --endpoint-url=http://localstack.localstack.svc.cluster.local:4566 s3 presign s3://data/releaseA/{{ $fileattr.filename }})
+              BODY="{\"statements\":[{\"statement\":\"LOAD CSV WITH HEADERS FROM \\\"$CSV_URL\\\" AS csvLine {{ $fileattr.statement }} \"}]}"
+              curl -o output.log \
+              -H "Accept: application/json;charset=UTF-8" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Basic bmVvNGo6bXlTZWNyZXRQYXNzd29yZA==" \
+              -d  "$BODY" \
+              http://neo4j.dev.svc.cluster.local:7474/db/neo4j/tx/commit
+
+
+      restartPolicy: Never
+  backoffLimit: 4
+---
+{{- end }}

@@ -1,0 +1,42 @@
+helmDefaults:
+  # time in seconds to wait for any individual Kubernetes operation
+  # (like Jobs for hooks, and waits on pod/pvc/svc/deployment readiness)
+  # (default 300)
+  timeout: 600
+
+environments:
+  dev:
+    values:
+
+---
+repositories:
+  - name: neo4j
+    url: https://helm.neo4j.com/neo4j
+---
+releases:
+
+  - name: neo4j
+    namespace: '{{ env "NAMESPACE" | default "dev" }}'
+    chart: neo4j/neo4j-standalone
+    version: 4.4.13
+    installed: true
+    values:
+      - volumes:
+          data:
+            mode: dynamic
+            dynamic:
+              storageClassName: "hostpath"
+              requests:
+                storage: 100Mi
+        neo4j:
+          password: mySecretPassword
+
+  - name: neo4j-importer
+    installed: true
+    needs:
+      - '{{ env "NAMESPACE" | default "dev" }}/neo4j'
+    namespace: '{{ env "NAMESPACE" | default "dev" }}'
+    chart: "./charts/importer-job"
+    values:
+      -  dataFile: '{{ env "DATA_FILE" }}'
+
